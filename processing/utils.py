@@ -51,11 +51,11 @@ def strip_subs(id1):
     for k in range(0, len(t)):
         subs = subs + t[k]['text']
     subtitles = re.sub(r'\(.*?\)', '', subs)
-    subtitles = re.sub(r'\[.*?\]', '', subs)
+    subtitles = re.sub(r'\[.*?\]', '', subtitles)
     return subtitles
 
 def transformPA(pol):
-    trans=(pol+1)/2
+    trans = (pol + 1)/2
     return trans
 
 def get_video_info(url):
