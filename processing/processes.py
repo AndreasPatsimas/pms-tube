@@ -6,21 +6,16 @@ from textblob.sentiments import NaiveBayesAnalyzer
 from processing.my_db import run_sql_command, run_insert_command, get_videos
 from processing.utils import *
 from datetime import datetime
-import schedule
+import schedule # pip3 install schedule
 import sys
-# def test():
-#     print('{} This is a test'.format(datetime.datetime.now())) #this works ok
-#
-# def exit():
-#     print('{} Now the system will exit '.format(datetime.datetime.now())) #this works ok
-#     sys.exit()
-#
-# schedule.every().day.at("09:57").do(test)
-# schedule.every().day.at('09:58').do(exit)
-#
-# while True:
-#     schedule.run_pending()
-#     time.sleep(1)
+
+# start=timer()
+# end=timer()
+# print(end-start)
+
+def exit():
+    print('{} Now the system will exit '.format(datetime.datetime.now())) #this works ok
+    sys.exit()
 
 def reset_all(host, port, user, password):
     sql_create = """DROP DATABASE `test`; """
@@ -110,16 +105,10 @@ def save_stats(host, port, user, password):
                            tup, host, port, user, password)
 
 def save_stats_scheduler(host, port, user, password):
-    videos = get_videos(host, port, user, password)
-    for video in videos:
-        id = video[0]
-        link = video[2]
-        data = get_video_info(link)
-        tup = (data['views'], data['likes'], data['dislikes'], datetime.now(), id)
-        run_insert_command('insert into stats (views, likes, dislikes, last_inserted, video_id) values (%s,%s,%s,%s,%s)',
-                           tup, host, port, user, password)
-
-
+    end = input("Give end time from now at format: 00:00")
+    schedule.every().hour.do(save_stats(host, port, user, password))
+    # schedule.every(2).minutes.do(save_stats(host, port, user, password))
+    schedule.every().day.at(end).do(exit)
 
 def sentiment_analysis(host, port, user, password):
 
@@ -132,9 +121,12 @@ def sentiment_analysis(host, port, user, password):
         blob2 = TextBlob(s, analyzer=NaiveBayesAnalyzer())
         transform = transformPA(blob.sentiment[0])
         print("transform:", transform)
-        # composite_index = ?
+
         print("blob:", blob.sentiment)
         print("blob2:", blob2.sentiment)
+
+        composite_index = (max(blob2.sentiment[1], blob2.sentiment[2]) + transform) / 2
+        print("composite_index:", composite_index)
         print("--------------------------\n")
 
     # sysxetish ->

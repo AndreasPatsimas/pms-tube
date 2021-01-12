@@ -10,24 +10,25 @@ def print_menu():
     print("1) Reset all results")
     print("2) Save videos")
     print("3) Save stats for every video")
-    print("4) Sentimental Analysis")
-    print("5) Exit")
+    print("4) Save stats for every video at every hour")
+    print("5) Sentimental Analysis")
+    print("6) Exit")
 
 
 def get_input():
     choice = 0
-    while (choice < 1 or choice > 5) :
+    while (choice < 1 or choice > 6) :
         try:
             choice = int(input())
         except:
             print("Invalid choice...")
 
-        if (choice < 1 or choice > 5):
+        if (choice < 1 or choice > 6):
             print("Make the right choice...")
 
     return choice
 
-def make_choice(choice, method_one, method_two, method_three, method_four, host, port, user, password):
+def make_choice(choice, method_one, method_two, method_three, method_four, method_five, host, port, user, password):
     if(choice == 1):
         method_one(host, port, user, password)
     elif(choice == 2):
@@ -37,23 +38,25 @@ def make_choice(choice, method_one, method_two, method_three, method_four, host,
     elif(choice == 4):
         method_four(host, port, user, password)
     elif(choice == 5):
+        method_five(host, port, user, password)
+    elif(choice == 6):
         print("Thank you for using PMS-TUBE's application")
         return True
 
     return False
 
-def run_menu(method_one, method_two, method_three, method_four):
+def run_menu(method_one, method_two, method_three, method_four, method_five):
     # host = input("Give ip/host:")
     # port = input("Give port:")
     # user = input("Give username:")
     # password = input("Give password:")
-    host = '10.0.120.49'
+    host = 'localhost'
     port = '3306'
-    user = 'test'
-    password = '12345'
+    user = 'root'
+    password = '19141918'
     print_headers()
     exit = False
     while (not exit):
         print_menu()
         choice = get_input()
-        exit = make_choice(choice, method_one, method_two, method_three, method_four, host, port, user, password)
+        exit = make_choice(choice, method_one, method_two, method_three, method_four, method_five, host, port, user, password)
