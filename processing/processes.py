@@ -6,6 +6,21 @@ from textblob.sentiments import NaiveBayesAnalyzer
 from processing.my_db import run_sql_command, run_insert_command, get_videos
 from processing.utils import *
 from datetime import datetime
+import schedule
+import sys
+# def test():
+#     print('{} This is a test'.format(datetime.datetime.now())) #this works ok
+#
+# def exit():
+#     print('{} Now the system will exit '.format(datetime.datetime.now())) #this works ok
+#     sys.exit()
+#
+# schedule.every().day.at("09:57").do(test)
+# schedule.every().day.at('09:58').do(exit)
+#
+# while True:
+#     schedule.run_pending()
+#     time.sleep(1)
 
 def reset_all(host, port, user, password):
     sql_create = """DROP DATABASE `test`; """
@@ -85,6 +100,16 @@ def save_videos(host, port, user, password):
                             acknowledged = True
 
 def save_stats(host, port, user, password):
+    videos = get_videos(host, port, user, password)
+    for video in videos:
+        id = video[0]
+        link = video[2]
+        data = get_video_info(link)
+        tup = (data['views'], data['likes'], data['dislikes'], datetime.now(), id)
+        run_insert_command('insert into stats (views, likes, dislikes, last_inserted, video_id) values (%s,%s,%s,%s,%s)',
+                           tup, host, port, user, password)
+
+def save_stats_scheduler(host, port, user, password):
     videos = get_videos(host, port, user, password)
     for video in videos:
         id = video[0]
