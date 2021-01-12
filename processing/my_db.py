@@ -31,10 +31,10 @@ def run_insert_command(query, record_tuple, host, port, user, password):
 
     cnx.close()
 
-def get_video_links(host, port, user, password):
+def get_videos(host, port, user, password):
     cnx = mysql.connector.connect(host=host, port= port, user=user, password=password, database='test')
     mycursor = cnx.cursor()
-    mycursor.execute('select link from videos')
+    mycursor.execute('select * from videos')
     results = mycursor.fetchall()
     cnx.commit()
     cnx.close()
