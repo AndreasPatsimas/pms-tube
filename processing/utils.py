@@ -35,7 +35,7 @@ def eval_subtitles(id1):
     return boo
 
 
-def strip_id(url):
+def strip_link(url):
     pos = url.find('=')
     id1 = url[pos + 1:len(url)]
     return (id1)

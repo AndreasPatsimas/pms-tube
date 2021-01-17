@@ -39,3 +39,12 @@ def get_videos(host, port, user, password):
     cnx.commit()
     cnx.close()
     return results
+
+def get_stats_from_video(host, port, user, password, video_id):
+    cnx = mysql.connector.connect(host=host, port= port, user=user, password=password, database='test')
+    mycursor = cnx.cursor()
+    mycursor.execute('select views, likes, dislikes from stats where video_id = ' + str(video_id))
+    results = mycursor.fetchall()
+    cnx.commit()
+    cnx.close()
+    return results

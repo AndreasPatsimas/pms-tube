@@ -3,7 +3,7 @@ from pytube import Playlist
 from pytube import YouTube
 from textblob import TextBlob
 from textblob.sentiments import NaiveBayesAnalyzer
-from processing.my_db import run_sql_command, run_insert_command, get_videos
+from processing.my_db import *
 from processing.utils import *
 from datetime import datetime
 import schedule # pip3 install schedule
@@ -19,7 +19,7 @@ def exit():
 
 def reset_all(host, port, user, password):
     sql_create = """DROP DATABASE `test`; """
-    sql_create1 = """create database if not exists test;use test;CREATE TABLE IF NOT EXISTS `videos` (`id` INT(11) NOT NULL AUTO_INCREMENT,`title` VARCHAR(200) NOT NULL,`link` VARCHAR(75) NOT NULL ,`duration` INT NOT NULL,`composite_index` FLOAT(12) NULL DEFAULT NULL,PRIMARY KEY (`id`));"""
+    sql_create1 = """create database if not exists test;use test;CREATE TABLE IF NOT EXISTS `videos` (`id` INT(11) NOT NULL AUTO_INCREMENT,`title` VARCHAR(200) NOT NULL,`link` VARCHAR(75) NOT NULL ,`duration` INT NOT NULL,`p` FLOAT(12) NULL DEFAULT NULL, `r` FLOAT(12) NULL DEFAULT NULL,`LPV` FLOAT(12) NULL DEFAULT NULL,`DPV` FLOAT(12) NULL DEFAULT NULL,`VPD` FLOAT(12) NULL DEFAULT NULL,`ci` FLOAT(12) NULL DEFAULT NULL,PRIMARY KEY (`id`));"""
     sql_create2 = """use test;CREATE TABLE IF NOT EXISTS `stats` (`id` INT(11) NOT NULL AUTO_INCREMENT,`views` INT(11) NULL DEFAULT NULL,`likes` INT(11) NULL DEFAULT NULL,`dislikes` INT(11) NULL DEFAULT NULL, `last_inserted` DATETIME NOT NULL, `video_id` INT(11) NOT NULL, PRIMARY KEY (`id`), FOREIGN KEY (video_id) REFERENCES videos(id));"""
 
     run_sql_command(sql_create, host, port, user, password)
@@ -85,7 +85,7 @@ def save_videos(host, port, user, password):
                         if x.upper() in title.upper() and playlist_insertion_count <= 300 and acknowledged == False and YouTube(
                                 vid).length <= 1.2 * average_playlist_video_length and "Compilation" not in YouTube(
                             vid).title and "Episodes" not in YouTube(vid).title and eval_subtitles(
-                            strip_id(vid)) == True:
+                            strip_link(vid)) == True:
                             playlist_insertion_count = playlist_insertion_count + 1
                             tup = (title, vid, YouTube(vid).length)
 
@@ -110,24 +110,29 @@ def save_stats_scheduler(host, port, user, password):
     # schedule.every(2).minutes.do(save_stats(host, port, user, password))
     schedule.every().day.at(end).do(exit)
 
-def sentiment_analysis(host, port, user, password):
+def save_indicators(host, port, user, password):
 
     videos = get_videos(host, port, user, password)
 
     for video in videos:
-        youtube_video_id = strip_id(video[2])
-        s = strip_subs(youtube_video_id)
+
+        video_id = video[0]
+        stats = get_stats_from_video(host, port, user, password, video_id)
+        print(stats)
+
+        youtube_video_link = strip_link(video[2])
+        s = strip_subs(youtube_video_link)
         blob = TextBlob(s)
         blob2 = TextBlob(s, analyzer=NaiveBayesAnalyzer())
         transform = transformPA(blob.sentiment[0])
-        print("transform:", transform)
+        ci = (max(blob2.sentiment[1], blob2.sentiment[2]) + transform) / 2
 
-        print("blob:", blob.sentiment)
-        print("blob2:", blob2.sentiment)
 
-        composite_index = (max(blob2.sentiment[1], blob2.sentiment[2]) + transform) / 2
-        print("composite_index:", composite_index)
-        print("--------------------------\n")
+
+def sentiment_analysis(host, port, user, password):
+
+    videos = get_videos(host, port, user, password)
+    print("sentiment analysis")
 
     # sysxetish ->
     # https://machinelearningmastery.com/how-to-use-correlation-to-understand-the-relationship-between-variables/#:~:text=The%20Pearson%20correlation%20coefficient%20(named,deviation%20of%20each%20data%20sample
