@@ -31,6 +31,22 @@ def run_insert_command(query, record_tuple, host, port, user, password):
 
     cnx.close()
 
+def update_videos(host, port, user, password, p, ci, video_id):
+
+    cnx = mysql.connector.connect(host=host, port= port, user=user, password=password, database='test')
+    my_cursor = cnx.cursor()
+    results = my_cursor.execute("update test.videos set p = " + str(p) + ", ci = " + str(ci) + " "
+                                "where id = " + str(video_id))
+    cnx.commit()
+
+    while True:
+        try:
+            next(results)
+        except Exception as e:
+            break
+
+    cnx.close()
+
 def get_videos(host, port, user, password):
     cnx = mysql.connector.connect(host=host, port= port, user=user, password=password, database='test')
     mycursor = cnx.cursor()
@@ -44,6 +60,15 @@ def get_stats_from_video(host, port, user, password, video_id):
     cnx = mysql.connector.connect(host=host, port= port, user=user, password=password, database='test')
     mycursor = cnx.cursor()
     mycursor.execute('select views, likes, dislikes from stats where video_id = ' + str(video_id))
+    results = mycursor.fetchall()
+    cnx.commit()
+    cnx.close()
+    return results
+
+def get_avg_stats_likes_and_dislikes(host, port, user, password, video_id):
+    cnx = mysql.connector.connect(host=host, port= port, user=user, password=password, database='test')
+    mycursor = cnx.cursor()
+    mycursor.execute('SELECT avg(likes), avg(dislikes) FROM stats where video_id = ' + str(video_id))
     results = mycursor.fetchall()
     cnx.commit()
     cnx.close()

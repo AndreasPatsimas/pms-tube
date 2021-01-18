@@ -117,6 +117,12 @@ def save_indicators(host, port, user, password):
     for video in videos:
 
         video_id = video[0]
+
+        preferences = get_avg_stats_likes_and_dislikes(host, port, user, password, video_id)
+        avg_likes = preferences[0][0]
+        avg_dislikes = preferences[0][1]
+        p = avg_likes / avg_dislikes
+
         stats = get_stats_from_video(host, port, user, password, video_id)
         print(stats)
 
@@ -126,6 +132,8 @@ def save_indicators(host, port, user, password):
         blob2 = TextBlob(s, analyzer=NaiveBayesAnalyzer())
         transform = transformPA(blob.sentiment[0])
         ci = (max(blob2.sentiment[1], blob2.sentiment[2]) + transform) / 2
+
+        update_videos(host, port, user, password, p, ci, video_id)
 
 
 
