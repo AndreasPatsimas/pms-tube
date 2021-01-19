@@ -7,6 +7,7 @@ from processing.my_db import *
 from processing.utils import *
 from datetime import datetime
 import schedule # pip3 install schedule
+import asyncio
 import sys
 
 # start=timer()
@@ -104,12 +105,6 @@ def save_stats(host, port, user, password):
         run_insert_command('insert into stats (views, likes, dislikes, last_inserted, video_id) values (%s,%s,%s,%s,%s)',
                            tup, host, port, user, password)
 
-def save_stats_scheduler(host, port, user, password):
-    end = input("Give end time from now at format: 00:00")
-    schedule.every().hour.do(save_stats(host, port, user, password))
-    # schedule.every(2).minutes.do(save_stats(host, port, user, password))
-    schedule.every().day.at(end).do(exit)
-
 def save_indicators(host, port, user, password):
 
     videos = get_videos(host, port, user, password)
@@ -139,6 +134,8 @@ def save_indicators(host, port, user, password):
 
 def sentiment_analysis(host, port, user, password):
 
+    # sklearn.preprocessing.normalize(X, norm='l2', *, axis=1, copy=True, return_norm=False)
+    # X--> dataframe
     videos = get_videos(host, port, user, password)
     print("sentiment analysis")
 

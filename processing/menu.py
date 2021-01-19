@@ -8,28 +8,27 @@ def print_headers():
 def print_menu():
     print("Please make a selection...")
     print("1) Reset all results and create database")
-    print("2) Save videos")
+    print("2) Search and save videos")
     print("3) Save stats for every video")
-    print("4) Save stats for every video at every hour")
-    print("5) Save indicators")
-    print("6) Sentimental Analysis")
-    print("7) Exit")
+    print("4) Sentiment analysis and save indicators")
+    print("5) Indicators Analysis")
+    print("6) Exit")
 
 
 def get_input():
     choice = 0
-    while (choice < 1 or choice > 7) :
+    while (choice < 1 or choice > 6) :
         try:
             choice = int(input())
         except:
             print("Invalid choice...")
 
-        if (choice < 1 or choice > 7):
+        if (choice < 1 or choice > 6):
             print("Make the right choice...")
 
     return choice
 
-def make_choice(choice, method_one, method_two, method_three, method_four, method_five, method_six, host, port, user, password):
+def make_choice(choice, method_one, method_two, method_three, method_four, method_five, host, port, user, password):
     if(choice == 1):
         method_one(host, port, user, password)
     elif(choice == 2):
@@ -41,18 +40,13 @@ def make_choice(choice, method_one, method_two, method_three, method_four, metho
     elif(choice == 5):
         method_five(host, port, user, password)
     elif(choice == 6):
-        method_six(host, port, user, password)
-    elif(choice == 7):
         print("Thank you for using PMS-TUBE's application")
         return True
 
     return False
 
-def run_menu(method_one, method_two, method_three, method_four, method_five, method_six):
-    # host = input("Give ip/host:")
-    # port = input("Give port:")
-    # user = input("Give username:")
-    # password = input("Give password:")
+def run_menu(method_one, method_two, method_three, method_four, method_five):
+
     host = 'localhost'
     port = '3306'
     user = 'root'
@@ -62,4 +56,4 @@ def run_menu(method_one, method_two, method_three, method_four, method_five, met
     while (not exit):
         print_menu()
         choice = get_input()
-        exit = make_choice(choice, method_one, method_two, method_three, method_four, method_five, method_six, host, port, user, password)
+        exit = make_choice(choice, method_one, method_two, method_three, method_four, method_five, host, port, user, password)
