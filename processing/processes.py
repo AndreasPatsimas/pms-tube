@@ -1,3 +1,4 @@
+import sklearn as sklearn
 from youtubesearchpython import *
 from pytube import Playlist
 from pytube import YouTube
@@ -6,15 +7,7 @@ from textblob.sentiments import NaiveBayesAnalyzer
 from processing.my_db import *
 from processing.utils import *
 from datetime import datetime
-import sys
-
-# start=timer()
-# end=timer()
-# print(end-start)
-
-def exit():
-    print('{} Now the system will exit '.format(datetime.datetime.now())) #this works ok
-    sys.exit()
+import pandas as pd
 
 def reset_all(host, port, user, password):
     sql_create = """DROP DATABASE `test`; """
@@ -143,10 +136,18 @@ def save_indicators(host, port, user, password):
 
 def sentiment_analysis(host, port, user, password):
 
+    credentials = "mysql://test:12345@10.0.120.49:3306/test"
+    # pip install Flask - SQLAlchemy
+
     # sklearn.preprocessing.normalize(X, norm='l2', *, axis=1, copy=True, return_norm=False)
     # X--> dataframe
-    videos = get_videos(host, port, user, password)
-    print("sentiment analysis")
+    video_ids_ci = get_top_three_video_ids(host, port, user, password)[0] + get_bottom_three_video_ids(host, port, user, password)[0]
+    df_ci_stats = pd.read_sql(" select views, likes, dislikes from stats where video_id in " + str(video_ids_ci), con=credentials)
+
+    df_videos = pd.read_sql("select duration, p, r, LPV, DPV, VPD, ci from videos", con=credentials)
+    print(df_videos.cov())
+    df_videos = sklearn.preprocessing.normalize(df_videos, norm='l2', axis=1, copy=True, return_norm=False)
+    print(type(df_videos))
 
     # sysxetish ->
     # https://machinelearningmastery.com/how-to-use-correlation-to-understand-the-relationship-between-variables/#:~:text=The%20Pearson%20correlation%20coefficient%20(named,deviation%20of%20each%20data%20sample
