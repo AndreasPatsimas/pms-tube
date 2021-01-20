@@ -47,10 +47,10 @@ def make_choice(choice, method_one, method_two, method_three, method_four, metho
 
 def run_menu(method_one, method_two, method_three, method_four, method_five):
 
-    host = 'localhost'
+    host = '10.0.120.49' #10.0.120.49
     port = '3306'
-    user = 'root'
-    password = '19141918'
+    user = 'test' #test
+    password = '12345' #12345
     print_headers()
     exit = False
     while (not exit):

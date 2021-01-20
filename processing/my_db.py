@@ -31,11 +31,12 @@ def run_insert_command(query, record_tuple, host, port, user, password):
 
     cnx.close()
 
-def update_videos(host, port, user, password, p, ci, video_id):
+def update_videos(host, port, user, password, p, r, LPV, DPV, VPD, ci, video_id):
 
     cnx = mysql.connector.connect(host=host, port= port, user=user, password=password, database='test')
     my_cursor = cnx.cursor()
-    results = my_cursor.execute("update test.videos set p = " + str(p) + ", ci = " + str(ci) + " "
+    results = my_cursor.execute("update test.videos set p = " + str(p) + ", r = " + str(r) + ", LPV = " + str(LPV) + ", DPV = "
+                                + str(DPV) + ", VPD = " + str(VPD) + ", ci = " + str(ci) + " "
                                 "where id = " + str(video_id))
     cnx.commit()
 
@@ -69,6 +70,16 @@ def get_avg_stats_likes_and_dislikes(host, port, user, password, video_id):
     cnx = mysql.connector.connect(host=host, port= port, user=user, password=password, database='test')
     mycursor = cnx.cursor()
     mycursor.execute('SELECT avg(likes), avg(dislikes) FROM stats where video_id = ' + str(video_id))
+    results = mycursor.fetchall()
+    cnx.commit()
+    cnx.close()
+    return results
+
+def get_min_max_values_stats(host, port, user, password, video_id):
+    cnx = mysql.connector.connect(host=host, port= port, user=user, password=password, database='test')
+    mycursor = cnx.cursor()
+    mycursor.execute('SELECT max(views), min(views), max(likes), min(likes), max(dislikes), min(dislikes) '
+                     'FROM test.stats where video_id = ' + str(video_id))
     results = mycursor.fetchall()
     cnx.commit()
     cnx.close()

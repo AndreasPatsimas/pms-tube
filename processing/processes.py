@@ -6,8 +6,6 @@ from textblob.sentiments import NaiveBayesAnalyzer
 from processing.my_db import *
 from processing.utils import *
 from datetime import datetime
-import schedule # pip3 install schedule
-import asyncio
 import sys
 
 # start=timer()
@@ -118,8 +116,19 @@ def save_indicators(host, port, user, password):
         avg_dislikes = preferences[0][1]
         p = avg_likes / avg_dislikes
 
-        stats = get_stats_from_video(host, port, user, password, video_id)
-        print(stats)
+        stats = get_min_max_values_stats(host, port, user, password, video_id)
+        max_views = stats[0][0]
+        min_views = stats[0][1]
+        max_likes = stats[0][2]
+        min_likes = stats[0][3]
+        max_dislikes = stats[0][4]
+        min_dislikes = stats[0][5]
+
+
+        r = 183 * (max_views - min_views) / max_views
+        LPV = (max_likes - min_likes) / (max_views - min_views)
+        DPV = (max_dislikes - min_dislikes) / (max_views - min_views)
+        VPD = (max_views - min_views) / 2
 
         youtube_video_link = strip_link(video[2])
         s = strip_subs(youtube_video_link)
@@ -128,7 +137,7 @@ def save_indicators(host, port, user, password):
         transform = transformPA(blob.sentiment[0])
         ci = (max(blob2.sentiment[1], blob2.sentiment[2]) + transform) / 2
 
-        update_videos(host, port, user, password, p, ci, video_id)
+        update_videos(host, port, user, password, p, r, LPV, DPV, VPD, ci, video_id)
 
 
 
