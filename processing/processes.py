@@ -1,4 +1,3 @@
-import sklearn as sklearn
 from youtubesearchpython import *
 from pytube import Playlist
 from pytube import YouTube
@@ -8,8 +7,14 @@ from processing.my_db import *
 from processing.utils import *
 from datetime import datetime
 import pandas as pd
+from matplotlib import pyplot as plt
+import seaborn as sns
+from timeit import  default_timer as timer
 
 def reset_all(host, port, user, password):
+
+    start = timer()
+
     sql_create = """DROP DATABASE `test`; """
     sql_create1 = """create database if not exists test;use test;CREATE TABLE IF NOT EXISTS `videos` (`id` INT(11) NOT NULL AUTO_INCREMENT,`title` VARCHAR(200) NOT NULL,`link` VARCHAR(75) NOT NULL ,`duration` INT NOT NULL,`p` FLOAT(12) NULL DEFAULT NULL, `r` FLOAT(12) NULL DEFAULT NULL,`LPV` FLOAT(12) NULL DEFAULT NULL,`DPV` FLOAT(12) NULL DEFAULT NULL,`VPD` FLOAT(12) NULL DEFAULT NULL,`ci` FLOAT(12) NULL DEFAULT NULL,PRIMARY KEY (`id`));"""
     sql_create2 = """use test;CREATE TABLE IF NOT EXISTS `stats` (`id` INT(11) NOT NULL AUTO_INCREMENT,`views` INT(11) NULL DEFAULT NULL,`likes` INT(11) NULL DEFAULT NULL,`dislikes` INT(11) NULL DEFAULT NULL, `last_inserted` DATETIME NOT NULL, `video_id` INT(11) NOT NULL, PRIMARY KEY (`id`), FOREIGN KEY (video_id) REFERENCES videos(id));"""
@@ -18,7 +23,11 @@ def reset_all(host, port, user, password):
     run_sql_command(sql_create1, host, port, user, password)
     run_sql_command(sql_create2, host, port, user, password)
 
+    end = timer()
+    print(end-start, "ms")
+
 def save_videos(host, port, user, password):
+    start = timer()
     total = 0
     counter = 0
     playlist_count = 0
@@ -85,8 +94,11 @@ def save_videos(host, port, user, password):
                                                port, user, password)
 
                             acknowledged = True
+                            end = timer()
+                            print(end - start, "ms")
 
 def save_stats(host, port, user, password):
+    start = timer()
     videos = get_videos(host, port, user, password)
     for video in videos:
         id = video[0]
@@ -95,9 +107,11 @@ def save_stats(host, port, user, password):
         tup = (data['views'], data['likes'], data['dislikes'], datetime.now(), id)
         run_insert_command('insert into stats (views, likes, dislikes, last_inserted, video_id) values (%s,%s,%s,%s,%s)',
                            tup, host, port, user, password)
+        end = timer()
+        print(end - start, "ms")
 
 def save_indicators(host, port, user, password):
-
+    start = timer()
     videos = get_videos(host, port, user, password)
 
     for video in videos:
@@ -131,23 +145,37 @@ def save_indicators(host, port, user, password):
         ci = (max(blob2.sentiment[1], blob2.sentiment[2]) + transform) / 2
 
         update_videos(host, port, user, password, p, r, LPV, DPV, VPD, ci, video_id)
+        end = timer()
+        print(end - start, "ms")
 
 
 
 def sentiment_analysis(host, port, user, password):
-
-    credentials = "mysql://test:12345@10.0.120.49:3306/test"
+    start = timer()
+    credentials = "mysql://" + user + ":" + password + "@" + host + ":"+ port + "/test"
     # pip install Flask - SQLAlchemy
 
-    # sklearn.preprocessing.normalize(X, norm='l2', *, axis=1, copy=True, return_norm=False)
-    # X--> dataframe
+
     video_ids_ci = get_top_three_video_ids(host, port, user, password)[0] + get_bottom_three_video_ids(host, port, user, password)[0]
-    df_ci_stats = pd.read_sql(" select views, likes, dislikes from stats where video_id in " + str(video_ids_ci), con=credentials)
+    df_ci_stats = pd.read_sql(" select views, likes, dislikes, last_inserted from stats where video_id in " + str(video_ids_ci), con=credentials)
+    print(df_ci_stats)
 
     df_videos = pd.read_sql("select duration, p, r, LPV, DPV, VPD, ci from videos", con=credentials)
-    print(df_videos.cov())
-    df_videos = sklearn.preprocessing.normalize(df_videos, norm='l2', axis=1, copy=True, return_norm=False)
-    print(type(df_videos))
 
-    # sysxetish ->
-    # https://machinelearningmastery.com/how-to-use-correlation-to-understand-the-relationship-between-variables/#:~:text=The%20Pearson%20correlation%20coefficient%20(named,deviation%20of%20each%20data%20sample
+    corrMatrix = df_videos.corr()
+
+    print(corrMatrix.head())
+    plt.figure(figsize=(30, 20))
+    sns.clustermap(corrMatrix, annot=True, fmt=".2f")
+    plt.show()
+
+    df_ci_stats.plot.bar(x="last_inserted", y="views", rot=70, title="Temporal evolution of the quantities measured on an hourly basis.")
+    plt.show(block=True)
+
+    df_ci_stats.plot.bar(x="last_inserted", y="likes", rot=70, title="Temporal evolution of the quantities measured on an hourly basis.")
+    plt.show(block=True)
+
+    df_ci_stats.plot.bar(x="last_inserted", y="dislikes", rot=70, title="Temporal evolution of the quantities measured on an hourly basis.")
+    plt.show(block=True)
+    end = timer()
+    print(end-start, "ms")
