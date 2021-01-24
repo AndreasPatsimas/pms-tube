@@ -9,11 +9,8 @@ from datetime import datetime
 import pandas as pd
 from matplotlib import pyplot as plt
 import seaborn as sns
-from timeit import  default_timer as timer
 
 def reset_all(host, port, user, password):
-
-    start = timer()
 
     sql_create = """DROP DATABASE `test`; """
     sql_create1 = """create database if not exists test;use test;CREATE TABLE IF NOT EXISTS `videos` (`id` INT(11) NOT NULL AUTO_INCREMENT,`title` VARCHAR(200) NOT NULL,`link` VARCHAR(75) NOT NULL ,`duration` INT NOT NULL,`p` FLOAT(12) NULL DEFAULT NULL, `r` FLOAT(12) NULL DEFAULT NULL,`LPV` FLOAT(12) NULL DEFAULT NULL,`DPV` FLOAT(12) NULL DEFAULT NULL,`VPD` FLOAT(12) NULL DEFAULT NULL,`ci` FLOAT(12) NULL DEFAULT NULL,PRIMARY KEY (`id`));"""
@@ -23,11 +20,9 @@ def reset_all(host, port, user, password):
     run_sql_command(sql_create1, host, port, user, password)
     run_sql_command(sql_create2, host, port, user, password)
 
-    end = timer()
-    print(end-start, "ms")
 
 def save_videos(host, port, user, password):
-    start = timer()
+
     total = 0
     counter = 0
     playlist_count = 0
@@ -94,11 +89,10 @@ def save_videos(host, port, user, password):
                                                port, user, password)
 
                             acknowledged = True
-                            end = timer()
-                            print(end - start, "ms")
+
 
 def save_stats(host, port, user, password):
-    start = timer()
+
     videos = get_videos(host, port, user, password)
     for video in videos:
         id = video[0]
@@ -107,11 +101,10 @@ def save_stats(host, port, user, password):
         tup = (data['views'], data['likes'], data['dislikes'], datetime.now(), id)
         run_insert_command('insert into stats (views, likes, dislikes, last_inserted, video_id) values (%s,%s,%s,%s,%s)',
                            tup, host, port, user, password)
-        end = timer()
-        print(end - start, "ms")
+
 
 def save_indicators(host, port, user, password):
-    start = timer()
+
     videos = get_videos(host, port, user, password)
 
     for video in videos:
@@ -133,8 +126,11 @@ def save_indicators(host, port, user, password):
 
 
         r = 183 * (max_views - min_views) / max_views
+
         LPV = (max_likes - min_likes) / (max_views - min_views)
         DPV = (max_dislikes - min_dislikes) / (max_views - min_views)
+
+
         VPD = (max_views - min_views) / 2
 
         youtube_video_link = strip_link(video[2])
@@ -145,20 +141,22 @@ def save_indicators(host, port, user, password):
         ci = (max(blob2.sentiment[1], blob2.sentiment[2]) + transform) / 2
 
         update_videos(host, port, user, password, p, r, LPV, DPV, VPD, ci, video_id)
-        end = timer()
-        print(end - start, "ms")
-
-
 
 def sentiment_analysis(host, port, user, password):
-    start = timer()
+
     credentials = "mysql://" + user + ":" + password + "@" + host + ":"+ port + "/test"
     # pip install Flask - SQLAlchemy
 
 
-    video_ids_ci = get_top_three_video_ids(host, port, user, password)[0] + get_bottom_three_video_ids(host, port, user, password)[0]
-    df_ci_stats = pd.read_sql(" select views, likes, dislikes, last_inserted from stats where video_id in " + str(video_ids_ci), con=credentials)
-    print(df_ci_stats)
+    video_ids_ci_top_three = get_top_three_video_ids(host, port, user, password)
+    video_ids_ci_top_three = video_ids_ci_top_three[0] + video_ids_ci_top_three[1] + video_ids_ci_top_three[2]
+    df_ci_stats_top_three = pd.read_sql(" select views, likes, dislikes, last_inserted from stats where video_id in " + str(video_ids_ci_top_three), con=credentials)
+    print(df_ci_stats_top_three)
+
+    video_ids_ci_bottom_three = get_bottom_three_video_ids(host, port, user, password)
+    video_ids_ci_bottom_three = video_ids_ci_bottom_three[0] + video_ids_ci_bottom_three[1] + video_ids_ci_bottom_three[2]
+    df_ci_stats_bottom_three = pd.read_sql(" select views, likes, dislikes, last_inserted from stats where video_id in " + str(video_ids_ci_bottom_three), con=credentials)
+    print(df_ci_stats_bottom_three)
 
     df_videos = pd.read_sql("select duration, p, r, LPV, DPV, VPD, ci from videos", con=credentials)
 
@@ -169,13 +167,34 @@ def sentiment_analysis(host, port, user, password):
     sns.clustermap(corrMatrix, annot=True, fmt=".2f")
     plt.show()
 
-    df_ci_stats.plot.bar(x="last_inserted", y="views", rot=70, title="Temporal evolution of the quantities measured on an hourly basis.")
+    df_ci_stats_top_three.plot.bar(x="last_inserted", y="views", rot=70, title="Top 3")
+    plt.xticks(fontsize=5)
     plt.show(block=True)
 
-    df_ci_stats.plot.bar(x="last_inserted", y="likes", rot=70, title="Temporal evolution of the quantities measured on an hourly basis.")
+    df_ci_stats_top_three.plot.bar(x="last_inserted", y="likes", rot=70, title="Top 3")
+    plt.xticks(fontsize=5)
     plt.show(block=True)
 
-    df_ci_stats.plot.bar(x="last_inserted", y="dislikes", rot=70, title="Temporal evolution of the quantities measured on an hourly basis.")
+    df_ci_stats_top_three.plot.bar(x="last_inserted", y="dislikes", rot=70, title="Top 3")
+    plt.xticks(fontsize=5)
     plt.show(block=True)
-    end = timer()
-    print(end-start, "ms")
+
+    df_ci_stats_bottom_three.plot.bar(x="last_inserted", y="views", rot=70, title="Bottom 3")
+    plt.xticks(fontsize=5)
+    plt.show(block=True)
+
+    df_ci_stats_bottom_three.plot.bar(x="last_inserted", y="likes", rot=70, title="Bottom 3")
+    plt.xticks(fontsize=5)
+    plt.show(block=True)
+
+    df_ci_stats_bottom_three.plot.bar(x="last_inserted", y="dislikes", rot=70, title="Bottom 3")
+    plt.xticks(fontsize=5)
+    plt.show(block=True)
+
+    df_videos_rank = pd.read_sql("SELECT SUBSTRING(title, 1, 15) as title, max(views) as views FROM test.videos v "
+                                 "inner join test.stats s on v.id = s.video_id "
+                                 "group by title order by s.views desc", con=credentials)
+
+    print(df_videos_rank)
+    df_videos_rank.plot.bar(x="title", y="views", rot=70, title="Videos Rankings By Views")
+    plt.show(block=True)
