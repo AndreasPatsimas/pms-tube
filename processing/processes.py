@@ -10,6 +10,7 @@ import pandas as pd
 from matplotlib import pyplot as plt
 import seaborn as sns
 
+# drop tables and recreate
 def reset_all(host, port, user, password):
 
     sql_create = """DROP DATABASE `test`; """
@@ -49,6 +50,7 @@ def save_videos(host, port, user, password):
     average_duration = total / counter
 
     for i in range(0, length):
+        # filtering videos
         if result3[i]['type'] == 'video' and video_insertion_count <= 100:
             acknowledged = False
             for w in word:
@@ -64,6 +66,7 @@ def save_videos(host, port, user, password):
                                            port, user, password)
                         acknowledged = True
 
+        # filtering playlist and save every video
         elif result3[i]['type'] == 'playlist':
 
             playlist_count = playlist_count + 1
@@ -90,7 +93,7 @@ def save_videos(host, port, user, password):
 
                             acknowledged = True
 
-
+# save stats for every video
 def save_stats(host, port, user, password):
 
     videos = get_videos(host, port, user, password)
@@ -102,7 +105,7 @@ def save_stats(host, port, user, password):
         run_insert_command('insert into stats (views, likes, dislikes, last_inserted, video_id) values (%s,%s,%s,%s,%s)',
                            tup, host, port, user, password)
 
-
+# save and update indicators p, r, LPV, DPV,VPD, ci
 def save_indicators(host, port, user, password):
 
     videos = get_videos(host, port, user, password)
@@ -147,12 +150,13 @@ def sentiment_analysis(host, port, user, password):
     credentials = "mysql://" + user + ":" + password + "@" + host + ":"+ port + "/test"
     # pip install Flask - SQLAlchemy
 
-
+    # videos with top 3 ci
     video_ids_ci_top_three = get_top_three_video_ids(host, port, user, password)
     video_ids_ci_top_three = video_ids_ci_top_three[0] + video_ids_ci_top_three[1] + video_ids_ci_top_three[2]
     df_ci_stats_top_three = pd.read_sql(" select views, likes, dislikes, last_inserted from stats where video_id in " + str(video_ids_ci_top_three), con=credentials)
     print(df_ci_stats_top_three)
 
+    # videos with bottom 3 ci
     video_ids_ci_bottom_three = get_bottom_three_video_ids(host, port, user, password)
     video_ids_ci_bottom_three = video_ids_ci_bottom_three[0] + video_ids_ci_bottom_three[1] + video_ids_ci_bottom_three[2]
     df_ci_stats_bottom_three = pd.read_sql(" select views, likes, dislikes, last_inserted from stats where video_id in " + str(video_ids_ci_bottom_three), con=credentials)
@@ -160,6 +164,7 @@ def sentiment_analysis(host, port, user, password):
 
     df_videos = pd.read_sql("select duration, p, r, LPV, DPV, VPD, ci from videos", con=credentials)
 
+    # correlation between indicators
     corrMatrix = df_videos.corr()
 
     print(corrMatrix.head())
@@ -167,6 +172,7 @@ def sentiment_analysis(host, port, user, password):
     sns.clustermap(corrMatrix, annot=True, fmt=".2f")
     plt.show()
 
+    # graphs for videos with top 3 ci and bottom 3 ci
     df_ci_stats_top_three.plot.bar(x="last_inserted", y="views", rot=70, title="Top 3")
     plt.xticks(fontsize=5)
     plt.show(block=True)
@@ -191,6 +197,16 @@ def sentiment_analysis(host, port, user, password):
     plt.xticks(fontsize=5)
     plt.show(block=True)
 
+    # Display
+    # the
+    # ranking
+    # order
+    # of
+    # the
+    # different
+    # cartoons(
+    # for the first
+    # 150) based on the normalized total number of views
     df_videos_rank = pd.read_sql("SELECT SUBSTRING(title, 1, 15) as title, max(views) as views FROM test.videos v "
                                  "inner join test.stats s on v.id = s.video_id "
                                  "group by title order by s.views desc", con=credentials)

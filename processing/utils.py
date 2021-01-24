@@ -6,6 +6,7 @@ from bs4 import BeautifulSoup as bs
 # init session
 session = HTMLSession()
 
+# get duration of video
 def get_duration(dur1):
     dur = dur1.split(':')
     mins = dur[0]
@@ -45,6 +46,7 @@ def get_views(viewcount):
     vc = viewcount.replace('views', '')
     return vc
 
+# pre-process for subtitles
 def strip_subs(id1):
     subs = ''
     t = YouTubeTranscriptApi.get_transcript(id1, languages=['en'])
@@ -54,10 +56,13 @@ def strip_subs(id1):
     subtitles = re.sub(r'\[.*?\]', '', subtitles)
     return subtitles
 
+# transform the PatternAnalyzer "positivity" scale
+# from interval [-1,1] to interval [0,1]
 def transformPA(pol):
     trans = (pol + 1)/2
     return trans
 
+# get views, likes, dislikes
 def get_video_info(url):
     print("stats from url: ", url)
     # download HTML code
